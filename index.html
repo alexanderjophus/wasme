@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>wasme</title>
+    </head>
+    <div>
+        <video id="camera" autoplay></video>
+    </div>
+    <body>
+        <script src="./bootstrap.js"></script>
+
+        <input type="radio" name="mode" id="normal" value="normal" />
+        <label for="html">Normal</label>
+        <br />
+        <input type="radio" name="mode" id="inverted" value="inverted" />
+        <label for="html">Invert</label>
+        <br />
+        <input type="radio" name="mode" id="greyscale" value="greyscale" />
+        <label for="html">Greyscale</label>
+        <br />
+        <input type="radio" name="mode" id="threshold" value="threshold" />
+        <label for="html">Threshold</label>
+        <br />
+        <input type="radio" name="mode" id="edges" value="edges" />
+        <label for="html">Edge Detection</label>
+        <br />
+
+        <div class="container">
+            <button id="start-camera">Start Camera</button>
+            <video id="video" style="display: none"></video>
+            <canvas id="output-canvas"></canvas>
+        </div>
+        <noscript
+            >This page contains webassembly and javascript content, please
+            enable javascript in your browser.</noscript
+        >
+    </body>
+</html>
