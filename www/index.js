@@ -1,8 +1,9 @@
-import { invert_colors, greyscale, threshold } from "wasme";
+import { invert_colors, greyscale, threshold, edge_detection } from "wasme";
 
 let isInverted = false;
 let isGreyscale = false;
 let isThreshold = false;
+let isEdges = false;
 
 async function startCamera() {
   const video = document.getElementById("video");
@@ -41,6 +42,12 @@ async function startCamera() {
 
           threshold(pixels, 128);
           ctx.putImageData(imageData, 0, 0);
+        } else if (isEdges) {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = new Uint8Array(imageData.data.buffer);
+
+          edge_detection(pixels);
+          ctx.putImageData(imageData, 0, 0);
         }
       }
       requestAnimationFrame(processFrame);
@@ -59,6 +66,7 @@ document.querySelectorAll('input[name="mode"]').forEach((radio) => {
     isInverted = e.target.value === "inverted";
     isGreyscale = e.target.value === "greyscale";
     isThreshold = e.target.value === "threshold";
+    isEdges = e.target.value === "edges";
   });
 });
 
