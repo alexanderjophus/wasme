@@ -1,4 +1,5 @@
 mod edges;
+mod pixelate;
 mod utils;
 
 use std::u8;

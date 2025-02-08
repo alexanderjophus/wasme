@@ -3,13 +3,14 @@ import {
   greyscale,
   threshold,
   edge_detection,
-  blur,
+  pixelate,
 } from "wasme";
 
 let isInverted = false;
 let isGreyscale = false;
 let isThreshold = false;
 let isEdges = false;
+let isPixelate = false;
 
 async function startCamera() {
   const video = document.getElementById("video");
@@ -54,6 +55,12 @@ async function startCamera() {
 
           edge_detection(pixels, canvas.width, canvas.height);
           ctx.putImageData(imageData, 0, 0);
+        } else if (isPixelate) {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const pixels = new Uint8Array(imageData.data.buffer);
+
+          pixelate(pixels, canvas.width, canvas.height, 16);
+          ctx.putImageData(imageData, 0, 0);
         }
       }
       requestAnimationFrame(processFrame);
@@ -73,6 +80,7 @@ document.querySelectorAll('input[name="mode"]').forEach((radio) => {
     isGreyscale = e.target.value === "greyscale";
     isThreshold = e.target.value === "threshold";
     isEdges = e.target.value === "edges";
+    isPixelate = e.target.value === "pixelate";
   });
 });
 
