@@ -1,4 +1,10 @@
-import { invert_colors, greyscale, threshold, edge_detection } from "wasme";
+import {
+  invert_colors,
+  greyscale,
+  threshold,
+  edge_detection,
+  blur,
+} from "wasme";
 
 let isInverted = false;
 let isGreyscale = false;
@@ -46,7 +52,7 @@ async function startCamera() {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const pixels = new Uint8Array(imageData.data.buffer);
 
-          edge_detection(pixels);
+          edge_detection(pixels, canvas.width, canvas.height);
           ctx.putImageData(imageData, 0, 0);
         }
       }
