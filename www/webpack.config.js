@@ -1,12 +1,49 @@
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 const path = require("path");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = {
-  entry: "./bootstrap.js",
+const config = {
+  entry: "./src/app/index.tsx",
+  mode: "development",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bootstrap.js",
+    filename: "index.js",
+    publicPath: "/",
   },
-  mode: "development",
-  plugins: [new CopyWebpackPlugin(["index.html", "../pkg/wasme_bg.wasm"])],
+  devServer: {
+    historyApiFallback: true,
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["css-loader"],
+      },
+      {
+        test: /\.tsx?$/,
+        loader: "ts-loader",
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.wasm$/,
+        type: "asset/inline",
+      },
+    ],
+  },
+  plugins: [
+    new CopyWebpackPlugin(["../pkg/wasme_bg.wasm"]),
+    new HtmlWebpackPlugin({
+      template: "public/index.html",
+      filename: "index.html",
+      inject: "body",
+    }),
+  ],
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"],
+    // alias: {
+    //   "react-dom": "@hot-loader/react-dom",
+    // },
+  },
 };
+
+module.exports = config;
