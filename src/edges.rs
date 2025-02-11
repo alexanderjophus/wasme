@@ -1,16 +1,16 @@
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::{greyscale, utils};
+use crate::{blur::gaussian_blur, get_row_col, greyscale, utils};
 
 #[wasm_bindgen]
-pub fn edge_detection(pixels: &mut [u8], width: u32, height: u32) {
+pub fn edge_detection(pixels: &mut [u8], width: u32, height: u32, kernel_size: usize) {
     utils::set_panic_hook();
     // Implementation of Canny Edge Detection in rust
     // https://en.wikipedia.org/wiki/Canny_edge_detector
 
     greyscale(pixels);
 
-    gaussian_blur(pixels, width, height);
+    gaussian_blur(pixels, width, height, kernel_size);
 
     let (gradient_magnitude, gradient_direction) = compute_gradients(&pixels, width, height);
 
@@ -25,38 +25,6 @@ pub fn edge_detection(pixels: &mut [u8], width: u32, height: u32) {
     apply_double_threshold(pixels, &gradient_magnitude, width, height);
 
     hysteresis(pixels, width, height);
-}
-
-fn gaussian_blur(pixels: &mut [u8], width: u32, height: u32) {
-    let copy = pixels.to_vec();
-    pixels
-        .chunks_exact_mut(4)
-        .enumerate()
-        .for_each(|(i, chunk)| {
-            let (row, col) = get_row_col(i, width);
-
-            // for each pixel in the image not on the border of the image
-            if row <= 1 || row >= height - 2 || col <= 1 || col >= width - 2 {
-                return;
-            }
-
-            // Apply Gaussian filter
-            let mut sum = 0.0;
-            for ky in 0..5 {
-                for kx in 0..5 {
-                    let img_x = row + kx - 2;
-                    let img_y = col + ky - 2;
-                    let pixel = copy[(img_x * width + img_y) as usize * 4];
-                    sum += pixel as f32 * GAUSSIAN_FILTER_2[ky as usize][kx as usize];
-                }
-            }
-            let val = (sum / 159.0) as u8;
-            chunk[0] = val;
-            chunk[1] = val;
-            chunk[2] = val;
-        });
-
-    pixels.copy_from_slice(&copy);
 }
 
 fn compute_gradients(pixels: &[u8], width: u32, height: u32) -> (Vec<f32>, Vec<f32>) {
@@ -207,24 +175,6 @@ fn hysteresis(pixels: &mut [u8], width: u32, height: u32) {
         }
     }
 }
-
-fn get_row_col(i: usize, width: u32) -> (u32, u32) {
-    if i < width as usize {
-        return (0, i as u32);
-    }
-
-    let row = i as u32 / width;
-    let col = i as u32 % width;
-    (row, col)
-}
-
-const GAUSSIAN_FILTER_2: [[f32; 5]; 5] = [
-    [2.0, 4.0, 5.0, 4.0, 2.0],
-    [4.0, 9.0, 12.0, 9.0, 4.0],
-    [5.0, 12.0, 15.0, 12.0, 5.0],
-    [4.0, 9.0, 12.0, 9.0, 4.0],
-    [2.0, 4.0, 5.0, 4.0, 2.0],
-];
 
 const SOBEL_FILTER_X: [[f32; 3]; 3] = [[-1.0, 0.0, 1.0], [-2.0, 0.0, 2.0], [-1.0, 0.0, 1.0]];
 const SOBEL_FILTER_Y: [[f32; 3]; 3] = [[-1.0, -2.0, -1.0], [0.0, 0.0, 0.0], [1.0, 2.0, 1.0]];

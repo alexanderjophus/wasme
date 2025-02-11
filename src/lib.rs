@@ -1,3 +1,4 @@
+mod blur;
 mod edges;
 mod pixelate;
 mod utils;
@@ -44,4 +45,14 @@ pub fn threshold(pixels: &mut [u8], threshold: u8) {
         chunk[1] = new_value;
         chunk[2] = new_value;
     });
+}
+
+fn get_row_col(i: usize, width: u32) -> (u32, u32) {
+    if i < width as usize {
+        return (0, i as u32);
+    }
+
+    let row = i as u32 / width;
+    let col = i as u32 % width;
+    (row, col)
 }

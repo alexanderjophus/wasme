@@ -4,6 +4,7 @@ import { Camera, CameraOff, Settings, Sliders } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import init, {
   threshold,
+  gaussian_blur,
   edge_detection,
   invert_colors,
   pixelate,
@@ -51,6 +52,23 @@ const VIDEO_MODES: VideoMode[] = [
     },
   },
   {
+    id: "blur",
+    name: "Gaussian Blur",
+    controls: [
+      {
+        id: "kernelSize",
+        name: "Kernel Size",
+        type: "range",
+        min: 1,
+        max: 10,
+        default: 3,
+      },
+    ],
+    processor: (imageData, width, height, settings) => {
+      gaussian_blur(imageData, width, height, settings.kernelSize);
+    },
+  },
+  {
     id: "threshold",
     name: "Threshold",
     controls: [
@@ -89,16 +107,16 @@ const VIDEO_MODES: VideoMode[] = [
     name: "Edge Detection",
     controls: [
       {
-        id: "threshold",
-        name: "Threshold Level",
+        id: "kernelSize",
+        name: "Kernel Size",
         type: "range",
-        min: 0,
-        max: 255,
-        default: 128,
+        min: 1,
+        max: 10,
+        default: 3,
       },
     ],
-    processor: (imageData, width, height) => {
-      edge_detection(imageData, width, height);
+    processor: (imageData, width, height, settings) => {
+      edge_detection(imageData, width, height, settings.kernelSize);
     },
   },
 ];
@@ -290,6 +308,7 @@ const WebcamFeed = () => {
                           >
                             {control.name}
                           </label>
+                          {": "}
                           <span className="text-sm text-gray-500">
                             {modeSettings[selectedMode]?.[control.id]}
                           </span>
