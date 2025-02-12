@@ -8,16 +8,28 @@ import init, {
   edge_detection,
   invert_colors,
   pixelate,
+  emboss,
+  greyscale,
+  emboss_grayscale,
+  colorize,
+  flip,
 } from "wasme";
 
 type ControlType = {
   id: string;
   name: string;
-  type: "range";
-  min: number;
-  max: number;
-  default: number;
-};
+} & (
+  | {
+      type: "range";
+      min: number;
+      max: number;
+      default: number;
+    }
+  | {
+      type: "checkbox";
+      default: boolean;
+    }
+);
 
 type VideoMode = {
   id: string;
@@ -33,22 +45,25 @@ type VideoMode = {
 
 type ModeSettings = {
   [key: string]: {
-    [key: string]: number;
+    [key: string]: any;
   };
 };
 
 const VIDEO_MODES: VideoMode[] = [
-  {
-    id: "normal",
-    name: "Normal",
-    controls: [],
-  },
   {
     id: "inverted",
     name: "Inverted",
     controls: [],
     processor: (imageData) => {
       invert_colors(imageData);
+    },
+  },
+  {
+    id: "greyscale",
+    name: "Greyscale",
+    controls: [],
+    processor: (imageData) => {
+      greyscale(imageData);
     },
   },
   {
@@ -119,6 +134,69 @@ const VIDEO_MODES: VideoMode[] = [
       edge_detection(imageData, width, height, settings.kernelSize);
     },
   },
+  {
+    id: "emboss",
+    name: "Emboss",
+    controls: [
+      {
+        id: "horizontal",
+        name: "Horizontal",
+        type: "checkbox",
+        default: false,
+      },
+    ],
+    processor: (imageData, width, height, settings) => {
+      emboss(imageData, width, height, settings.horizontal === 1);
+    },
+  },
+  {
+    id: "emboss_greyscale",
+    name: "Emboss Greyscale",
+    controls: [
+      {
+        id: "horizontal",
+        name: "Horizontal",
+        type: "checkbox",
+        default: false,
+      },
+    ],
+    processor: (imageData, width, height, settings) => {
+      emboss_grayscale(imageData, width, height, settings.horizontal === 1);
+    },
+  },
+  {
+    id: "colorize",
+    name: "Colorize",
+    controls: [
+      {
+        id: "r",
+        name: "Red",
+        type: "range",
+        min: 0,
+        max: 255,
+        default: 0,
+      },
+      {
+        id: "g",
+        name: "Green",
+        type: "range",
+        min: 0,
+        max: 255,
+        default: 0,
+      },
+      {
+        id: "b",
+        name: "Blue",
+        type: "range",
+        min: 0,
+        max: 255,
+        default: 0,
+      },
+    ],
+    processor: (imageData, _w, _h, settings) => {
+      colorize(imageData, settings.r, settings.g, settings.b);
+    },
+  },
 ];
 
 const WebcamFeed = () => {
@@ -126,9 +204,8 @@ const WebcamFeed = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [error, setError] = useState("");
-  const [selectedMode, setSelectedMode] = useState("normal");
+  const [selectedMode, setSelectedMode] = useState("");
   const [modeSettings, setModeSettings] = useState<ModeSettings>({});
 
   // Initialize default settings for each mode
@@ -163,17 +240,19 @@ const WebcamFeed = () => {
           (mode) => mode.id === selectedMode,
         );
 
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = new Uint8Array(imageData.data.buffer);
+        flip(pixels, canvas.width, canvas.height);
+
         if (currentMode?.processor) {
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const pixels = new Uint8Array(imageData.data.buffer);
           currentMode.processor(
             pixels,
             canvas.width,
             canvas.height,
             modeSettings[selectedMode],
           );
-          ctx.putImageData(imageData, 0, 0);
         }
+        ctx.putImageData(imageData, 0, 0);
       }
 
       animationRef.current = requestAnimationFrame(processFrame);
@@ -221,10 +300,7 @@ const WebcamFeed = () => {
     };
   }, []);
 
-  const handleModeChange = (modeId: string) => {
-    console.log("Switching to mode:", modeId);
-    setSelectedMode(modeId);
-  };
+  const handleModeChange = (modeId: string) => setSelectedMode(modeId);
 
   const handleSettingChange = (controlId: string, value: string) => {
     setModeSettings((prev) => ({
@@ -245,24 +321,8 @@ const WebcamFeed = () => {
           <h2 className="text-xl font-semibold">Webcam Feed</h2>
           <button
             onClick={isStreaming ? stopStream : startStream}
-            className="flex items-center gap-2 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-          >
-            {isStreaming ? (
-              <>
-                <CameraOff size={20} />
-                Stop Camera
-              </>
-            ) : (
-              <>
-                <Camera size={20} />
-                Start Camera
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
             className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-              isSettingsOpen
+              isStreaming
                 ? "bg-gray-200 hover:bg-gray-300"
                 : "bg-gray-100 hover:bg-gray-200"
             }`}
@@ -271,7 +331,7 @@ const WebcamFeed = () => {
             Video Mode
           </button>
           {/* Settings Panel */}
-          {isSettingsOpen && (
+          {isStreaming && (
             <div className="bg-gray-50 rounded-lg p-4 space-y-4">
               {/* Mode Controls */}
               <div>
@@ -313,20 +373,31 @@ const WebcamFeed = () => {
                             {modeSettings[selectedMode]?.[control.id]}
                           </span>
                         </div>
-                        <input
-                          type="range"
-                          id={control.id}
-                          min={control.min}
-                          max={control.max}
-                          value={
-                            modeSettings[selectedMode]?.[control.id] ??
-                            control.default
-                          }
-                          onChange={(e) =>
-                            handleSettingChange(control.id, e.target.value)
-                          }
-                          className="w-full"
-                        />
+                        {control.type === "range" && (
+                          <input
+                            type="range"
+                            id={control.id}
+                            min={control.min}
+                            max={control.max}
+                            value={modeSettings[selectedMode]?.[control.id]}
+                            onChange={(e) =>
+                              handleSettingChange(control.id, e.target.value)
+                            }
+                          />
+                        )}
+                        {control.type === "checkbox" && (
+                          <input
+                            type="checkbox"
+                            id={control.id}
+                            checked={modeSettings[selectedMode]?.[control.id]}
+                            onChange={(e) =>
+                              handleSettingChange(
+                                control.id,
+                                e.target.checked ? "1" : "0",
+                              )
+                            }
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -342,18 +413,19 @@ const WebcamFeed = () => {
             autoPlay
             playsInline
             className="w-full h-full object-cover"
+            style={{ transform: "scaleX(-1)" }}
           />
           <canvas ref={canvasRef} className="w-full h-full object-cover" />
 
-          {!isStreaming && !error && (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-              Camera is turned off
-            </div>
-          )}
+          {!isStreaming && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              {!error && (
+                <div className="text-gray-500">{"Camera is turned off"}</div>
+              )}
 
-          {error && (
-            <div className="absolute inset-0 flex items-center justify-center text-red-500 px-4 text-center">
-              {error}
+              {error && (
+                <div className="text-red-500 px-4 text-center">{error}</div>
+              )}
             </div>
           )}
         </div>
