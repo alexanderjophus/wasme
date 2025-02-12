@@ -101,6 +101,22 @@ pub fn gaussian_noise(pixels: &mut [u8], std_dev: f32) {
     });
 }
 
+#[wasm_bindgen]
+pub fn sepia(pixels: &mut [u8]) {
+    utils::set_panic_hook();
+    pixels.chunks_exact_mut(4).for_each(|chunk| {
+        let r = chunk[0] as f32;
+        let g = chunk[1] as f32;
+        let b = chunk[2] as f32;
+        let r = (r as f32 * 0.393 + g as f32 * 0.769 + b as f32 * 0.189).clamp(0.0, 255.0) as u8;
+        let g = (r as f32 * 0.349 + g as f32 * 0.686 + b as f32 * 0.168).clamp(0.0, 255.0) as u8;
+        let b = (r as f32 * 0.272 + g as f32 * 0.534 + b as f32 * 0.131).clamp(0.0, 255.0) as u8;
+        chunk[0] = r;
+        chunk[1] = g;
+        chunk[2] = b;
+    });
+}
+
 fn get_row_col(i: usize, width: u32) -> (u32, u32) {
     if i < width as usize {
         return (0, i as u32);

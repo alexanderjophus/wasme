@@ -13,6 +13,7 @@ import init, {
   emboss_grayscale,
   colorize,
   gaussian_noise,
+  sepia,
   flip,
 } from "wasme";
 
@@ -213,6 +214,14 @@ const VIDEO_MODES: VideoMode[] = [
     ],
     processor: (imageData, _w, _h, settings) => {
       colorize(imageData, settings.r, settings.g, settings.b);
+    },
+  },
+  {
+    id: "sepia",
+    name: "Sepia",
+    controls: [],
+    processor: (imageData) => {
+      sepia(imageData);
     },
   },
 ];
