@@ -6,6 +6,7 @@ mod utils;
 
 use std::u8;
 
+use rand::{rng, Rng};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -79,6 +80,24 @@ pub fn colorize(pixels: &mut [u8], r: u8, g: u8, b: u8) {
         chunk[0] = (chunk[0].saturating_add(r)).clamp(0, 255) as u8;
         chunk[1] = (chunk[1].saturating_add(g)).clamp(0, 255) as u8;
         chunk[2] = (chunk[2].saturating_add(b)).clamp(0, 255) as u8;
+    });
+}
+
+#[wasm_bindgen]
+pub fn gaussian_noise(pixels: &mut [u8], std_dev: f32) {
+    utils::set_panic_hook();
+    let mut rng = rng();
+    pixels.chunks_exact_mut(4).for_each(|chunk| {
+        let noise = rng.random_range(0.0..1.0);
+        let r = chunk[0] as f32;
+        let g = chunk[1] as f32;
+        let b = chunk[2] as f32;
+        let r = (r + noise * std_dev).clamp(0.0, 255.0) as u8;
+        let g = (g + noise * std_dev).clamp(0.0, 255.0) as u8;
+        let b = (b + noise * std_dev).clamp(0.0, 255.0) as u8;
+        chunk[0] = r;
+        chunk[1] = g;
+        chunk[2] = b;
     });
 }
 

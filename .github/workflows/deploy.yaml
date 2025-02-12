@@ -20,7 +20,7 @@ jobs:
       - name: Install wasm-pack
         run: cargo binstall wasm-pack
       - name: Build
-        run: wasm-pack build --release --target web
+        run: RUSTFLAGS='--cfg getrandom_backend="wasm_js"' wasm-pack build --release --target web
       - run: cd www && npm install
       - run: cd www && npm run build
       - name: Deploy 🚀

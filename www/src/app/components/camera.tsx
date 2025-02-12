@@ -12,6 +12,7 @@ import init, {
   greyscale,
   emboss_grayscale,
   colorize,
+  gaussian_noise,
   flip,
 } from "wasme";
 
@@ -81,6 +82,23 @@ const VIDEO_MODES: VideoMode[] = [
     ],
     processor: (imageData, width, height, settings) => {
       gaussian_blur(imageData, width, height, settings.kernelSize);
+    },
+  },
+  {
+    id: "noise",
+    name: "Gaussian Noise",
+    controls: [
+      {
+        id: "std_dev",
+        name: "Standard Deviation",
+        type: "range",
+        min: 0,
+        max: 100,
+        default: 25,
+      },
+    ],
+    processor: (imageData, _w, _h, settings) => {
+      gaussian_noise(imageData, settings.std_dev);
     },
   },
   {
