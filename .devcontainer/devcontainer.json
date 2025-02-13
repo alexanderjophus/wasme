@@ -2,6 +2,7 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
     "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/lumenpink/devcontainer-features/wasm-pack:0": {}
+    "ghcr.io/lumenpink/devcontainer-features/wasm-pack:0": {},
+    "ghcr.io/devcontainers/features/node:1": {}
   }
 }
