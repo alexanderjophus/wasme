@@ -11,22 +11,26 @@ import {
   emboss_grayscale,
   colorize,
   gaussian_noise,
-  sepia
+  sepia,
 } from "wasme";
 
 export type ControlType = {
   id: string;
   name: string;
-} & ({
-  type: "range";
-  min: number;
-  max: number;
-  default: number;
-} |
-{
-  type: "checkbox";
-  default: boolean;
-});export type VideoMode = {
+} & (
+  | {
+      type: "range";
+      min: number;
+      max: number;
+      default: number;
+    }
+  | {
+      type: "checkbox";
+      default: boolean;
+    }
+);
+
+export interface Filter {
   id: string;
   name: string;
   controls: ControlType[];
@@ -34,15 +38,21 @@ export type ControlType = {
     imageData: Uint8Array,
     width: number,
     height: number,
-    settings: { [key: string]: number; }
+    settings: { [key: string]: number },
   ) => void;
+}
+
+export type FilterSettings = {
+  [key: string]: number | boolean;
 };
-export type ModeSettings = {
-  [key: string]: {
-    [key: string]: any;
-  };
-};
-export const VIDEO_MODES: VideoMode[] = [
+
+export interface FilterRowProps {
+  filter: Filter;
+  settings: FilterSettings;
+  onUpdateSettings: (filterId: string, settings: FilterSettings) => void;
+}
+
+export const VIDEO_MODES: Filter[] = [
   {
     id: "inverted",
     name: "Inverted",
@@ -216,4 +226,3 @@ export const VIDEO_MODES: VideoMode[] = [
     },
   },
 ];
-
